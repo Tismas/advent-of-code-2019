@@ -8,25 +8,27 @@ import (
 
 func main() {
 	var initialMemory = helpers.ReadNumbersSingleLine(os.Open("./input.txt"))
-	var instructionPointer = 0
-	var memory = initialMemory[:]
-	memory[1] = 12
-	memory[2] = 2
-	for memory[instructionPointer] != 99 {
-		var opcode = memory[instructionPointer]
-		if opcode == 1 {
-			var args = memory[instructionPointer+1 : instructionPointer+4]
-			memory[args[2]] = memory[args[0]] + memory[args[1]]
-			instructionPointer += 4
-		} else if opcode == 2 {
-			var args = memory[instructionPointer+1 : instructionPointer+4]
-			memory[args[2]] = memory[args[0]] * memory[args[1]]
-			instructionPointer += 4
-		} else {
-			panic("Invalid state")
+	initialMemory[1] = 12
+	initialMemory[2] = 2
+	var output = helpers.Interprete(initialMemory)
+	fmt.Println("Part 1: ", output)
+
+	var expectedOutput = 19690720
+	var noun = 0
+	var verb = 0
+	for verb < 100 {
+		initialMemory[1] = noun
+		initialMemory[2] = verb
+		var output = helpers.Interprete(initialMemory)
+		if output == expectedOutput {
+			fmt.Println("Part 2: ", 100*noun+verb)
+			break
+		}
+
+		noun++
+		if noun == 100 {
+			verb++
+			noun = 0
 		}
 	}
-	fmt.Println("Part 1: ", memory[0])
-
-	// var expectedOutput = 19690720
 }
