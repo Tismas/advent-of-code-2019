@@ -14,11 +14,13 @@ func main() {
 	}
 	fmt.Println("Part 1: ", fuel)
 
-	additionalFuel := 0
-	fuelAcc := fuel/3 - 2
-	for fuelAcc > 0 {
-		additionalFuel += fuelAcc
-		fuelAcc = fuelAcc/3 - 2
+	fuel2 := 0
+	for _, value := range modules {
+		value = value/3 - 2
+		for value > 0 {
+			fuel2 += value
+			value = value/3 - 2
+		}
 	}
-	fmt.Println("Part 2: ", fuel+additionalFuel)
+	fmt.Println("Part 2: ", fuel2)
 }
