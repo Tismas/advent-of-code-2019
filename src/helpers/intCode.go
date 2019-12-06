@@ -15,13 +15,13 @@ var handlers = map[int]func([]int, int, int, int){
 
 // Interprete intcode and return output(memory[0])
 func Interprete(initialMemory []int) int {
-	var memory = make([]int, len(initialMemory))
+	memory := make([]int, len(initialMemory))
 	copy(memory, initialMemory)
-	var instructionPointer = 0
+	instructionPointer := 0
 	for memory[instructionPointer] != 99 {
-		var opcode = memory[instructionPointer]
+		opcode := memory[instructionPointer]
 		if handler, ok := handlers[opcode]; ok {
-			var args = memory[instructionPointer+1 : instructionPointer+4]
+			args := memory[instructionPointer+1 : instructionPointer+4]
 			handler(memory, args[0], args[1], args[2])
 			instructionPointer += 4
 		} else {

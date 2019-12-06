@@ -22,10 +22,20 @@ func ReadStrings(file *os.File, e error) []string {
 	return lines
 }
 
+// ReadAndSplitStrings reads lines and split them by delimeter
+func ReadAndSplitStrings(file *os.File, e error, delimeter string) [][]string {
+	lines := ReadStrings(file, e)
+	splitted := make([][]string, len(lines))
+	for i, line := range lines {
+		splitted[i] = strings.Split(line, delimeter)
+	}
+	return splitted
+}
+
 // ReadNumbers returns array of integers(each in new line) in a file
 func ReadNumbers(file *os.File, e error) []int {
-	var lines = ReadStrings(file, e)
 	var numbers []int
+	lines := ReadStrings(file, e)
 	for _, line := range lines {
 		num, err := strconv.Atoi(line)
 		if err != nil {
@@ -38,9 +48,9 @@ func ReadNumbers(file *os.File, e error) []int {
 
 // ReadNumbersSingleLine returns array of integers in the first line of the file
 func ReadNumbersSingleLine(file *os.File, e error) []int {
-	var line = ReadStrings(file, e)[0]
 	var numbers []int
-	for _, numberStr := range strings.Split(line, ",") {
+	line := ReadAndSplitStrings(file, e, ",")[0]
+	for _, numberStr := range line {
 		num, err := strconv.Atoi(numberStr)
 		if err != nil {
 			panic(err)

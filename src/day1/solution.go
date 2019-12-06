@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	var modules = helpers.ReadNumbers(os.Open("./input.txt"))
+	modules := helpers.ReadNumbers(os.Open("./input.txt"))
 	fuel := 0
 	for _, value := range modules {
 		fuel += value/3 - 2
