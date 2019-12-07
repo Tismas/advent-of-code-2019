@@ -78,7 +78,7 @@ func connect(grid map[string]string, pos point, newPos point, wire string) []poi
 	return collitionPoints
 }
 func getManhattanDistance(p1, p2 point) int {
-	return int(math.Abs(float64(p1.x - p2.x)) + math.Abs(float64(p1.y - p2.y)))
+	return int(math.Abs(float64(p1.x-p2.x)) + math.Abs(float64(p1.y-p2.y)))
 }
 func getClosest(collisionPoints []point) int {
 	closest := 0
@@ -90,17 +90,17 @@ func getClosest(collisionPoints []point) int {
 }
 
 func isBetween(p1, p2, goal point) bool {
-	dxc := goal.x - p1.x;
-	dyc := goal.y - p1.y;
+	dxc := goal.x - p1.x
+	dyc := goal.y - p1.y
 
-	dxl := p2.x - p1.x;
-	dyl := p2.y - p1.y;
+	dxl := p2.x - p1.x
+	dyl := p2.y - p1.y
 
-	cross := dxc * dyl - dyc * dxl;
+	cross := dxc*dyl - dyc*dxl
 	if cross != 0 {
 		return false
 	}
-	if (math.Abs(float64(dxl)) >= math.Abs(float64(dyl))) {
+	if math.Abs(float64(dxl)) >= math.Abs(float64(dyl)) {
 		if dxl > 0 {
 			return p1.x <= goal.x && goal.x <= p2.x
 		} else {
