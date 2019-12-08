@@ -1,7 +1,6 @@
 package helpers
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -17,7 +16,7 @@ var argCounts = map[int]int{
 	8: 3,
 }
 
-func add(memory []int, pointer int, modes [3]int, args ...int) int {
+func add(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	if modes[0] == 0 {
@@ -30,7 +29,7 @@ func add(memory []int, pointer int, modes [3]int, args ...int) int {
 	memory[address] = v1 + v2
 	return pointer + 4
 }
-func multiply(memory []int, pointer int, modes [3]int, args ...int) int {
+func multiply(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	if modes[0] == 0 {
@@ -43,20 +42,19 @@ func multiply(memory []int, pointer int, modes [3]int, args ...int) int {
 	memory[address] = v1 * v2
 	return pointer + 4
 }
-func set(memory []int, pointer int, modes [3]int, args ...int) int {
+func set(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
 	address := args[0]
-	memory[address] = args[1]
+	memory[address] = inputValues[0]
 	return pointer + 2
 }
-func print(memory []int, pointer int, modes [3]int, args ...int) int {
+func print(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
 	v1 := args[0]
 	if modes[0] == 0 {
 		v1 = memory[v1]
 	}
-	fmt.Println(v1)
 	return pointer + 2
 }
-func jumpIfTrue(memory []int, pointer int, modes [3]int, args ...int) int {
+func jumpIfTrue(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	if modes[0] == 0 {
@@ -70,7 +68,7 @@ func jumpIfTrue(memory []int, pointer int, modes [3]int, args ...int) int {
 	}
 	return pointer + 3
 }
-func jumpIfFalse(memory []int, pointer int, modes [3]int, args ...int) int {
+func jumpIfFalse(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	if modes[0] == 0 {
@@ -84,7 +82,7 @@ func jumpIfFalse(memory []int, pointer int, modes [3]int, args ...int) int {
 	}
 	return pointer + 3
 }
-func lessThan(memory []int, pointer int, modes [3]int, args ...int) int {
+func lessThan(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	v3 := args[2]
@@ -101,7 +99,7 @@ func lessThan(memory []int, pointer int, modes [3]int, args ...int) int {
 	}
 	return pointer + 4
 }
-func equals(memory []int, pointer int, modes [3]int, args ...int) int {
+func equals(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	v3 := args[2]
@@ -119,7 +117,7 @@ func equals(memory []int, pointer int, modes [3]int, args ...int) int {
 	return pointer + 4
 }
 
-var handlers = map[int]func([]int, int, [3]int, ...int) int{
+var handlers = map[int]func([]int, int, [3]int, []int, ...int) int{
 	1: add,
 	2: multiply,
 	3: set,
@@ -162,19 +160,29 @@ func interpreteInstruction(instruction int) (int, [3]int) {
 }
 
 // Interprete intcode and return output(memory[0])
-func Interprete(initialMemory []int, inputValue int) int {
+func Interprete(initialMemory []int, inputValues []int) (int, int) {
 	memory := append([]int(nil), initialMemory...)
 	instructionPointer := 0
+	output := 0
 	for memory[instructionPointer] != 99 {
 		opcode, modes := interpreteInstruction(memory[instructionPointer])
 		if handler, ok := handlers[opcode]; ok {
 			jump := argCounts[opcode] + 1
 			args := append([]int(nil), memory[instructionPointer+1:instructionPointer+jump]...)
-			args = append(args, inputValue)
-			instructionPointer = handler(memory, instructionPointer, modes, args...)
+			instructionPointer = handler(memory, instructionPointer, modes, inputValues, args...)
+			if opcode == 3 {
+				inputValues = inputValues[1:]
+			}
+			if opcode == 4 {
+				v1 := args[0]
+				if modes[0] == 0 {
+					v1 = memory[v1]
+				}
+				output = v1
+			}
 		} else {
 			panic("Something went wrong in Intcode")
 		}
 	}
-	return memory[0]
+	return memory[0], output
 }

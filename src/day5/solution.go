@@ -8,8 +8,8 @@ import (
 
 func main() {
 	initialMemory := helpers.ReadNumbersSingleLine(os.Open("./input.txt"))
-	fmt.Println("Part 1")
-	helpers.Interprete(initialMemory, 1)
-	fmt.Println("Part 2")
-	helpers.Interprete(initialMemory, 5)
+	_, output := helpers.Interprete(initialMemory, []int{1})
+	fmt.Println("Part 1: ", output)
+	_, output = helpers.Interprete(initialMemory, []int{5})
+	fmt.Println("Part 2: ", output)
 }
