@@ -8,12 +8,45 @@ import (
 )
 
 func getThrusterOutput(initialMemory []int, phaseSetting [5]int) int {
-	_, outputA := helpers.Interprete(initialMemory, []int{phaseSetting[0], 0})
-	_, outputB := helpers.Interprete(initialMemory, []int{phaseSetting[1], outputA})
-	_, outputC := helpers.Interprete(initialMemory, []int{phaseSetting[2], outputB})
-	_, outputD := helpers.Interprete(initialMemory, []int{phaseSetting[3], outputC})
-	_, outputThruster := helpers.Interprete(initialMemory, []int{phaseSetting[4], outputD})
-	return outputThruster
+	inputChanA := make(chan int)
+	outputChanA := make(chan int)
+	inputChanB := make(chan int)
+	outputChanB := make(chan int)
+	inputChanC := make(chan int)
+	outputChanC := make(chan int)
+	inputChanD := make(chan int)
+	outputChanD := make(chan int)
+	inputChanE := make(chan int)
+	outputChanE := make(chan int)
+
+	go helpers.Interprete(initialMemory, inputChanA, outputChanA, false)
+	go helpers.Interprete(initialMemory, inputChanB, outputChanB, false)
+	go helpers.Interprete(initialMemory, inputChanC, outputChanC, false)
+	go helpers.Interprete(initialMemory, inputChanD, outputChanD, false)
+	go helpers.Interprete(initialMemory, inputChanE, outputChanE, false)
+
+	inputChanA <- phaseSetting[0]
+	inputChanB <- phaseSetting[1]
+	inputChanC <- phaseSetting[2]
+	inputChanD <- phaseSetting[3]
+	inputChanE <- phaseSetting[4]
+
+	inputChanA <- 0
+	inputChanB <- (<-outputChanA)
+	inputChanC <- (<-outputChanB)
+	inputChanD <- (<-outputChanC)
+	inputChanE <- (<-outputChanD)
+
+	// var output int
+	// for output = range outputChanE {
+	// 	inputChanA <- output
+	// 	inputChanB <- (<-outputChanA)
+	// 	inputChanC <- (<-outputChanB)
+	// 	inputChanD <- (<-outputChanC)
+	// 	inputChanE <- (<-outputChanD)
+	// }
+
+	return <-outputChanE
 }
 
 func perm(a [5]int, f func([5]int), i int) {

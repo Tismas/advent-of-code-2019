@@ -16,7 +16,7 @@ var argCounts = map[int]int{
 	8: 3,
 }
 
-func add(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
+func add(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	if modes[0] == 0 {
@@ -29,7 +29,7 @@ func add(memory []int, pointer int, modes [3]int, inputValues []int, args ...int
 	memory[address] = v1 + v2
 	return pointer + 4
 }
-func multiply(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
+func multiply(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	if modes[0] == 0 {
@@ -42,19 +42,20 @@ func multiply(memory []int, pointer int, modes [3]int, inputValues []int, args .
 	memory[address] = v1 * v2
 	return pointer + 4
 }
-func set(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
+func set(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
 	address := args[0]
-	memory[address] = inputValues[0]
+	memory[address] = <-inputChan
 	return pointer + 2
 }
-func print(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
+func get(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
 	v1 := args[0]
 	if modes[0] == 0 {
 		v1 = memory[v1]
 	}
+	outputChan <- v1
 	return pointer + 2
 }
-func jumpIfTrue(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
+func jumpIfTrue(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	if modes[0] == 0 {
@@ -68,7 +69,7 @@ func jumpIfTrue(memory []int, pointer int, modes [3]int, inputValues []int, args
 	}
 	return pointer + 3
 }
-func jumpIfFalse(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
+func jumpIfFalse(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	if modes[0] == 0 {
@@ -82,7 +83,7 @@ func jumpIfFalse(memory []int, pointer int, modes [3]int, inputValues []int, arg
 	}
 	return pointer + 3
 }
-func lessThan(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
+func lessThan(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	v3 := args[2]
@@ -99,7 +100,7 @@ func lessThan(memory []int, pointer int, modes [3]int, inputValues []int, args .
 	}
 	return pointer + 4
 }
-func equals(memory []int, pointer int, modes [3]int, inputValues []int, args ...int) int {
+func equals(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
 	v1 := args[0]
 	v2 := args[1]
 	v3 := args[2]
@@ -117,11 +118,11 @@ func equals(memory []int, pointer int, modes [3]int, inputValues []int, args ...
 	return pointer + 4
 }
 
-var handlers = map[int]func([]int, int, [3]int, []int, ...int) int{
+var handlers = map[int]func([]int, int, [3]int, chan int, chan int, ...int) int{
 	1: add,
 	2: multiply,
 	3: set,
-	4: print,
+	4: get,
 	5: jumpIfTrue,
 	6: jumpIfFalse,
 	7: lessThan,
@@ -159,30 +160,22 @@ func interpreteInstruction(instruction int) (int, [3]int) {
 	return opcode, modes
 }
 
-// Interprete intcode and return output(memory[0])
-func Interprete(initialMemory []int, inputValues []int) (int, int) {
+// Interprete intcode and return end memory
+func Interprete(initialMemory []int, inputChan chan int, outputChan chan int, outputFromMemory bool) {
 	memory := append([]int(nil), initialMemory...)
 	instructionPointer := 0
-	output := 0
 	for memory[instructionPointer] != 99 {
 		opcode, modes := interpreteInstruction(memory[instructionPointer])
 		if handler, ok := handlers[opcode]; ok {
 			jump := argCounts[opcode] + 1
 			args := append([]int(nil), memory[instructionPointer+1:instructionPointer+jump]...)
-			instructionPointer = handler(memory, instructionPointer, modes, inputValues, args...)
-			if opcode == 3 {
-				inputValues = inputValues[1:]
-			}
-			if opcode == 4 {
-				v1 := args[0]
-				if modes[0] == 0 {
-					v1 = memory[v1]
-				}
-				output = v1
-			}
+			instructionPointer = handler(memory, instructionPointer, modes, inputChan, outputChan, args...)
 		} else {
 			panic("Something went wrong in Intcode")
 		}
 	}
-	return memory[0], output
+	if outputFromMemory {
+		outputChan <- memory[0]
+	}
+	close(outputChan)
 }
