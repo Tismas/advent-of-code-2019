@@ -12,7 +12,7 @@ func main() {
 	initialMemory[2] = 2
 	inputChan := make(chan int)
 	outputChan := make(chan int)
-	go helpers.Interprete(initialMemory, inputChan, outputChan, true)
+	go helpers.Interprete(initialMemory, inputChan, outputChan, make(chan bool), true)
 	fmt.Println("Part 1: ", <-outputChan)
 
 	expectedOutput := 19690720
@@ -23,7 +23,7 @@ func main() {
 		outputChan = make(chan int)
 		initialMemory[1] = noun
 		initialMemory[2] = verb
-		go helpers.Interprete(initialMemory, inputChan, outputChan, true)
+		go helpers.Interprete(initialMemory, inputChan, outputChan, make(chan bool), true)
 		if <-outputChan == expectedOutput {
 			fmt.Println("Part 2: ", 100*noun+verb)
 			break

@@ -8,45 +8,32 @@ import (
 )
 
 func getThrusterOutput(initialMemory []int, phaseSetting [5]int) int {
-	inputChanA := make(chan int)
-	outputChanA := make(chan int)
-	inputChanB := make(chan int)
-	outputChanB := make(chan int)
-	inputChanC := make(chan int)
-	outputChanC := make(chan int)
-	inputChanD := make(chan int)
-	outputChanD := make(chan int)
-	inputChanE := make(chan int)
-	outputChanE := make(chan int)
+	inputA := make(chan int, 1)
+	inputB := make(chan int)
+	inputC := make(chan int)
+	inputD := make(chan int)
+	inputE := make(chan int)
+	halts := make(chan bool)
 
-	go helpers.Interprete(initialMemory, inputChanA, outputChanA, false)
-	go helpers.Interprete(initialMemory, inputChanB, outputChanB, false)
-	go helpers.Interprete(initialMemory, inputChanC, outputChanC, false)
-	go helpers.Interprete(initialMemory, inputChanD, outputChanD, false)
-	go helpers.Interprete(initialMemory, inputChanE, outputChanE, false)
+	go helpers.Interprete(initialMemory, inputA, inputB, halts, false)
+	go helpers.Interprete(initialMemory, inputB, inputC, halts, false)
+	go helpers.Interprete(initialMemory, inputC, inputD, halts, false)
+	go helpers.Interprete(initialMemory, inputD, inputE, halts, false)
+	go helpers.Interprete(initialMemory, inputE, inputA, halts, false)
 
-	inputChanA <- phaseSetting[0]
-	inputChanB <- phaseSetting[1]
-	inputChanC <- phaseSetting[2]
-	inputChanD <- phaseSetting[3]
-	inputChanE <- phaseSetting[4]
+	inputA <- phaseSetting[0]
+	inputB <- phaseSetting[1]
+	inputC <- phaseSetting[2]
+	inputD <- phaseSetting[3]
+	inputE <- phaseSetting[4]
 
-	inputChanA <- 0
-	inputChanB <- (<-outputChanA)
-	inputChanC <- (<-outputChanB)
-	inputChanD <- (<-outputChanC)
-	inputChanE <- (<-outputChanD)
+	inputA <- 0
 
-	// var output int
-	// for output = range outputChanE {
-	// 	inputChanA <- output
-	// 	inputChanB <- (<-outputChanA)
-	// 	inputChanC <- (<-outputChanB)
-	// 	inputChanD <- (<-outputChanC)
-	// 	inputChanE <- (<-outputChanD)
-	// }
+	for i := 0; i < 5; i++ {
+		<-halts
+	}
 
-	return <-outputChanE
+	return <-inputA
 }
 
 func perm(a [5]int, f func([5]int), i int) {
@@ -93,12 +80,12 @@ func main() {
 
 	fmt.Println("Part 1: ", maxOutput)
 
-	// maxOutput = 0
-	// permutations = getPhasePermutationsPart2()
-	// for i := 0; i < len(permutations); i++ {
-	// 	outputThruster := getThrusterOutput(initialMemory, permutations[i])
-	// 	maxOutput = int(math.Max(float64(maxOutput), float64(outputThruster)))
-	// }
+	maxOutput = 0
+	permutations = getPhasePermutationsPart2()
+	for i := 0; i < len(permutations); i++ {
+		outputThruster := getThrusterOutput(initialMemory, permutations[i])
+		maxOutput = int(math.Max(float64(maxOutput), float64(outputThruster)))
+	}
 
-	// fmt.Println("Part 2: ", maxOutput)
+	fmt.Println("Part 2: ", maxOutput)
 }

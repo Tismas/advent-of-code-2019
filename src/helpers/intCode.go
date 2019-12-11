@@ -161,7 +161,7 @@ func interpreteInstruction(instruction int) (int, [3]int) {
 }
 
 // Interprete intcode and return end memory
-func Interprete(initialMemory []int, inputChan chan int, outputChan chan int, outputFromMemory bool) {
+func Interprete(initialMemory []int, inputChan chan int, outputChan chan int, halts chan bool, outputFromMemory bool) {
 	memory := append([]int(nil), initialMemory...)
 	instructionPointer := 0
 	for memory[instructionPointer] != 99 {
@@ -178,4 +178,5 @@ func Interprete(initialMemory []int, inputChan chan int, outputChan chan int, ou
 		outputChan <- memory[0]
 	}
 	close(outputChan)
+	halts <- true
 }

@@ -10,7 +10,7 @@ func main() {
 	initialMemory := helpers.ReadNumbersSingleLine(os.Open("./input.txt"))
 	outputChan := make(chan int)
 	inputChan := make(chan int)
-	go helpers.Interprete(initialMemory, inputChan, outputChan, false)
+	go helpers.Interprete(initialMemory, inputChan, outputChan, make(chan bool), false)
 	inputChan <- 1
 	for output := range outputChan {
 		if output != 0 {
@@ -20,7 +20,7 @@ func main() {
 
 	outputChan = make(chan int)
 	inputChan = make(chan int)
-	go helpers.Interprete(initialMemory, inputChan, outputChan, false)
+	go helpers.Interprete(initialMemory, inputChan, outputChan, make(chan bool), false)
 	inputChan <- 5
 	for output := range outputChan {
 		if output != 0 {
