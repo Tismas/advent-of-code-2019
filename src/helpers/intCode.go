@@ -127,6 +127,7 @@ var handlers = map[int]func([]int, int, [3]int, chan int, chan int, ...int) int{
 	6: jumpIfFalse,
 	7: lessThan,
 	8: equals,
+	// 9: setRelativeBase,
 }
 
 func reverse(arr []string) []string {

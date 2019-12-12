@@ -3,9 +3,20 @@ package helpers
 import (
 	"bufio"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
+
+// Movable holds data for moving object
+type Movable struct {
+	X  int
+	Y  int
+	Z  int
+	Vx int
+	Vy int
+	Vz int
+}
 
 // ReadStrings returns array of strings(lines) in a file
 func ReadStrings(file *os.File, e error) []string {
@@ -58,4 +69,22 @@ func ReadNumbersSingleLine(file *os.File, e error) []int {
 		numbers = append(numbers, num)
 	}
 	return numbers
+}
+
+// ReadPositions reads positions in format <x=0, y=0, z=0>
+func ReadPositions(file *os.File, e error) []Movable {
+	var positions []Movable
+
+	lines := ReadStrings(file, e)
+	xReg := regexp.MustCompile("x=(-?\\d+)")
+	yReg := regexp.MustCompile("y=(-?\\d+)")
+	zReg := regexp.MustCompile("z=(-?\\d+)")
+	for _, line := range lines {
+		x, _ := strconv.Atoi(xReg.FindString(line)[2:])
+		y, _ := strconv.Atoi(yReg.FindString(line)[2:])
+		z, _ := strconv.Atoi(zReg.FindString(line)[2:])
+		positions = append(positions, Movable{x, y, z, 0, 0, 0})
+	}
+
+	return positions
 }
