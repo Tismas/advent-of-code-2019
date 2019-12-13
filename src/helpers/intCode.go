@@ -14,108 +14,92 @@ var argCounts = map[int]int{
 	6: 2,
 	7: 3,
 	8: 3,
+	9: 1,
+}
+
+var relativeBase = 0
+
+func getValueUsignMode(memory []int, arg, mode int) int {
+	if mode == 0 {
+		return memory[arg]
+	}
+	if mode == 2 {
+		return memory[relativeBase+arg]
+	}
+	return arg
+}
+func getAddressUsingMode(arg, mode int) int {
+	if mode == 2 {
+		return relativeBase + arg
+	}
+	return arg
 }
 
 func add(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
-	v1 := args[0]
-	v2 := args[1]
-	if modes[0] == 0 {
-		v1 = memory[v1]
-	}
-	if modes[1] == 0 {
-		v2 = memory[v2]
-	}
-	address := args[2]
+	v1 := getValueUsignMode(memory, args[0], modes[0])
+	v2 := getValueUsignMode(memory, args[1], modes[1])
+	address := getAddressUsingMode(args[2], modes[2])
 	memory[address] = v1 + v2
 	return pointer + 4
 }
 func multiply(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
-	v1 := args[0]
-	v2 := args[1]
-	if modes[0] == 0 {
-		v1 = memory[v1]
-	}
-	if modes[1] == 0 {
-		v2 = memory[v2]
-	}
-	address := args[2]
+	v1 := getValueUsignMode(memory, args[0], modes[0])
+	v2 := getValueUsignMode(memory, args[1], modes[1])
+	address := getAddressUsingMode(args[2], modes[2])
 	memory[address] = v1 * v2
 	return pointer + 4
 }
 func set(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
-	address := args[0]
+	address := getAddressUsingMode(args[0], modes[0])
 	memory[address] = <-inputChan
 	return pointer + 2
 }
 func get(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
-	v1 := args[0]
-	if modes[0] == 0 {
-		v1 = memory[v1]
-	}
+	v1 := getValueUsignMode(memory, args[0], modes[0])
 	outputChan <- v1
 	return pointer + 2
 }
 func jumpIfTrue(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
-	v1 := args[0]
-	v2 := args[1]
-	if modes[0] == 0 {
-		v1 = memory[v1]
-	}
-	if modes[1] == 0 {
-		v2 = memory[v2]
-	}
+	v1 := getValueUsignMode(memory, args[0], modes[0])
+	v2 := getValueUsignMode(memory, args[1], modes[1])
 	if v1 != 0 {
 		return v2
 	}
 	return pointer + 3
 }
 func jumpIfFalse(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
-	v1 := args[0]
-	v2 := args[1]
-	if modes[0] == 0 {
-		v1 = memory[v1]
-	}
-	if modes[1] == 0 {
-		v2 = memory[v2]
-	}
+	v1 := getValueUsignMode(memory, args[0], modes[0])
+	v2 := getValueUsignMode(memory, args[1], modes[1])
 	if v1 == 0 {
 		return v2
 	}
 	return pointer + 3
 }
 func lessThan(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
-	v1 := args[0]
-	v2 := args[1]
-	v3 := args[2]
-	if modes[0] == 0 {
-		v1 = memory[v1]
-	}
-	if modes[1] == 0 {
-		v2 = memory[v2]
-	}
+	v1 := getValueUsignMode(memory, args[0], modes[0])
+	v2 := getValueUsignMode(memory, args[1], modes[1])
+	address := getAddressUsingMode(args[2], modes[2])
 	if v1 < v2 {
-		memory[v3] = 1
+		memory[address] = 1
 	} else {
-		memory[v3] = 0
+		memory[address] = 0
 	}
 	return pointer + 4
 }
 func equals(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
-	v1 := args[0]
-	v2 := args[1]
-	v3 := args[2]
-	if modes[0] == 0 {
-		v1 = memory[v1]
-	}
-	if modes[1] == 0 {
-		v2 = memory[v2]
-	}
+	v1 := getValueUsignMode(memory, args[0], modes[0])
+	v2 := getValueUsignMode(memory, args[1], modes[1])
+	address := getAddressUsingMode(args[2], modes[2])
 	if v1 == v2 {
-		memory[v3] = 1
+		memory[address] = 1
 	} else {
-		memory[v3] = 0
+		memory[address] = 0
 	}
 	return pointer + 4
+}
+func setRelativeBase(memory []int, pointer int, modes [3]int, inputChan chan int, outputChan chan int, args ...int) int {
+	relativeBase += getValueUsignMode(memory, args[0], modes[0])
+	return pointer + 2
 }
 
 var handlers = map[int]func([]int, int, [3]int, chan int, chan int, ...int) int{
@@ -127,7 +111,7 @@ var handlers = map[int]func([]int, int, [3]int, chan int, chan int, ...int) int{
 	6: jumpIfFalse,
 	7: lessThan,
 	8: equals,
-	// 9: setRelativeBase,
+	9: setRelativeBase,
 }
 
 func reverse(arr []string) []string {
@@ -179,5 +163,6 @@ func Interprete(initialMemory []int, inputChan chan int, outputChan chan int, ha
 		outputChan <- memory[0]
 	}
 	close(outputChan)
+	relativeBase = 0
 	halts <- true
 }
