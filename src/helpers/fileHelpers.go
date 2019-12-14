@@ -88,3 +88,35 @@ func ReadPositions(file *os.File, e error) []Movable {
 
 	return positions
 }
+
+// Chemical consists of name and quantity
+type Chemical struct {
+	Name     string
+	Quantity int
+}
+
+func parseChemical(str string) Chemical {
+	splitted := strings.Split(str, " ")
+	quantity, _ := strconv.Atoi(splitted[0])
+	name := splitted[1]
+	return Chemical{name, quantity}
+}
+
+// ReadReactions reads reactions in format 1 ORE => 1 FUEL
+func ReadReactions(file *os.File, e error) map[Chemical][]Chemical {
+	lines := ReadStrings(file, e)
+	result := make(map[Chemical][]Chemical)
+	for _, line := range lines {
+		splitted := strings.Split(line, " => ")
+		input := splitted[0]
+		output := splitted[1]
+		splittedInput := strings.Split(input, ", ")
+		product := parseChemical(output)
+		var chemicalInputs []Chemical
+		for _, chemicalString := range splittedInput {
+			chemicalInputs = append(chemicalInputs, parseChemical(chemicalString))
+		}
+		result[product] = chemicalInputs
+	}
+	return result
+}
